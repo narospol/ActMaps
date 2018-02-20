@@ -1,0 +1,44 @@
+<p>
+  example-map works!
+</p>
+
+<div id="map">
+  <act-map [zoom]="14"
+    [latitude]="13.7643345" 
+    [longitude]="100.5684626">
+    <!-- <act-marker [latitude]="point.lat" [longitude]="point.lng"></act-marker> -->
+    
+    <!-- <act-info-marker *ngFor="let item of markers; let i=index"
+      [latitude]="item.lat" [longitude]="item.lng">
+      <ng-template>
+        Marker
+      </ng-template>
+      <act-pop-over [isOpen]="true" [pointer]="false" [closeWhenOthersOpen]="false">
+        <ng-template>
+          <app-pop-over-content></app-pop-over-content>
+        </ng-template>
+      </act-pop-over>
+    </act-info-marker> -->
+
+    <act-info-marker *ngFor="let item of markers; let i=index"
+      [latitude]="item.lat" [longitude]="item.lng">
+        <ng-template>
+          25.50
+        </ng-template>
+        <act-pop-over [isOpen]="true" [closeWhenOthersOpen]="false">
+          <ng-template>
+            <app-pop-over-content></app-pop-over-content>
+          </ng-template>
+        </act-pop-over>
+    </act-info-marker>
+
+    <!-- <act-pop-over *ngFor="let item of markers; let i=index"
+      [isOpen]="true"
+      [latitude]="item.lat" [longitude]="item.lng">
+        <ng-template>
+          Pop Over
+        </ng-template>
+    </act-pop-over> -->
+    
+  </act-map>
+</div>

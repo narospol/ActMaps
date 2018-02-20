@@ -19,6 +19,9 @@
       "testTsconfig": "tsconfig.spec.json",
       "prefix": "app",
       "styles": [
+        "../node_modules/snazzy-info-window/dist/snazzy-info-window.css",
+        "pop-over.css",
+        "custom-marker.css",
         "styles.css"
       ],
       "scripts": [],

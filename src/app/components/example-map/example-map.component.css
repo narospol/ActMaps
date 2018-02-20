@@ -1,0 +1,10 @@
+#map {
+  display: block;
+  margin: auto;
+  width: 600px;
+  height: 400px;;
+}
+
+act-map {
+  height: 100%;
+}

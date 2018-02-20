@@ -1,0 +1,9 @@
+<div class="pop-over-content">
+  <img class="pop-over-image" src="https://photos.hotelbeds.com/giata/small/22/223074/223074a_hb_f_001.jpg">
+  <div style="margin-left:80px; margin-bottom:20px;">
+    <h5>Test hotel</h5>
+    <span *ngFor="let rating of [1,1,1,0.5]" 
+      class="icon-star-level-s" [ngClass]="{'-half': rating == 0.5}">
+    </span>
+  </div>
+</div>

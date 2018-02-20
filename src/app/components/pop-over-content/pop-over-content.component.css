@@ -1,0 +1,21 @@
+
+.pop-over-image {
+  float:left;
+  width:70px;
+  height: 70px;
+}
+
+.icon-star-level-s {
+  background-color: transparent;
+  background-image: url(https://alpha-www.ascendtravel-dev.com/assets/images/main/icon_star.svg);
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 100%;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  background-size: 16px 16px;
+}
+.icon-star-level-s .-half {
+  width: 8px;
+}
