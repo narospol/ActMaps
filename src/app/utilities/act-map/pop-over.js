@@ -679,18 +679,15 @@
                         if (e.stopPropagation) e.stopPropagation();
                         _this2.activateCallback('bgClicked');
                     }));
-                    this.trackListener(google.maps.event.addDomListener(_this2._html.contentWrapper, 'onmouseenter', function(e) {
+                    this.trackListener(google.maps.event.addDomListener(_this2._html.contentWrapper, 'mouseover', function(e) {
                         e.cancelBubble = true;
                         if (e.stopPropagation) e.stopPropagation();
                         _this2.activateCallback('bgHoverEnter');
-                        console.log('onmouseenter');
-                        
                     }));
-                    this.trackListener(google.maps.event.addDomListener(_this2._html.contentWrapper, 'onmouseleave', function(e) {
+                    this.trackListener(google.maps.event.addDomListener(_this2._html.contentWrapper, 'mouseout', function(e) {
                         e.cancelBubble = true;
                         if (e.stopPropagation) e.stopPropagation();
                         _this2.activateCallback('bgHoverLeave');
-                        console.log('onmouseleave');
                     }));
                 }
                 

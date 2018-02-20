@@ -127,12 +127,10 @@ export class ActInfoMarker implements AfterViewInit, OnDestroy, OnChanges {
           bgClicked: () => {
             this._popOver && this._popOver.togglePopOver();
           },
-          bgHoverEnter: () => { // TODO: implement mouse hover into pop-over.js
-            console.log('hover enter');
+          bgHoverEnter: () => {
             this._popOver && this._popOver.openPopOver();
           },
           bgHoverLeave: () => {
-            console.log('hover leave');
             this._popOver && this._popOver.closePopOver();
           }
         }
