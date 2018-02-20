@@ -128,10 +128,10 @@ export class ActInfoMarker implements AfterViewInit, OnDestroy, OnChanges {
             this._popOver && this._popOver.togglePopOver();
           },
           bgHoverEnter: () => {
-            this._popOver && this._popOver.openPopOver();
+            // this._popOver && this._popOver.openPopOver();
           },
           bgHoverLeave: () => {
-            this._popOver && this._popOver.closePopOver();
+            // this._popOver && this._popOver.closePopOver();
           }
         }
       };
