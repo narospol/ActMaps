@@ -27,7 +27,7 @@ import { InfoMarkerManager } from '../services/managers/info-marker-manager';
     GoogleMapsAPIWrapper, MarkerManager, InfoWindowManager, InfoMarkerManager, CircleManager,
   ],
   host: {
-    '[class.sebm-google-map-container]': 'true'
+    '[class.google-map-container]': 'true'
   },
   styles: [`
     .act-map-container-inner {
@@ -39,7 +39,7 @@ import { InfoMarkerManager } from '../services/managers/info-marker-manager';
     }
   `],
   template: `
-    <div class='act-map-container-inner sebm-google-map-container-inner'></div>
+    <div class='act-map-container-inner google-map-container-inner'></div>
     <div class='act-map-content'>
       <ng-content></ng-content>
     </div>

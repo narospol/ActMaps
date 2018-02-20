@@ -22,6 +22,7 @@ declare var System: any;
     <ng-content></ng-content>`
 })
 export class ActPopOver implements AfterViewInit, OnDestroy, OnChanges {
+  @Input() key: String;
   @Input() latitude: number;
   @Input() longitude: number;
   @Input() isOpen: boolean = false;
@@ -39,8 +40,7 @@ export class ActPopOver implements AfterViewInit, OnDestroy, OnChanges {
   @Input() openOnMarkerClick: boolean = true;
   @Input() closeOnMapClick: boolean = true;
   @Input() wrapperClass: string;
-  @Input() closeWhenOthersOpen: boolean = false;
-  @Input() showCloseButton: boolean = true;
+  @Input() closeWhenOthersOpen: boolean = true;
   @Input() panOnOpen: boolean = true;
 
   @Output() isOpenChange: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -56,7 +56,7 @@ export class ActPopOver implements AfterViewInit, OnDestroy, OnChanges {
   protected _popOverInitialized: Promise<any> | null = null;
 
   constructor(
-    @Optional() @Host() @SkipSelf() private _popOver: ActInfoMarker,
+    @Optional() @Host() @SkipSelf() private _infoMarker: ActInfoMarker,
     private _wrapper: GoogleMapsAPIWrapper,
     private _manager: InfoMarkerManager,
     private _loader: MapsAPILoader
@@ -67,23 +67,30 @@ export class ActPopOver implements AfterViewInit, OnDestroy, OnChanges {
       return;
     }
     if ('isOpen' in changes && this.isOpen) {
-      this._openInfoWindow();
+      this.openPopOver();
     } else if ('isOpen' in changes && !this.isOpen) {
-      this._closeInfoWindow();
+      this.closePopOver();
     }
-    if (('latitude' in changes || 'longitude' in changes) && this._popOver == null) {
+    if (('latitude' in changes || 'longitude' in changes) && this._infoMarker == null) {
       this._updatePosition();
     }
   }
 
   ngAfterViewInit() {
-    console.log('popOver', this._popOver);
-    const m = this._manager !== null && this._popOver !== null ? this._manager.getNativeWindow(this._popOver.key) : null;
+    setTimeout(() => {
+      this.createPopOver();
+    }, 500);
+  }
+
+  protected createPopOver() {
+    const m = this._manager !== null && this._infoMarker !== null ? this._manager.getMarker(this._infoMarker.key) : null;
     this._popOverInitialized = this._loader.load()
       .then(() => System.import('../pop-over.js'))
       .then((module: any) => Promise.all([module, m, this._wrapper.getNativeMap()]))
       .then((elems) => {
         const options: any = {
+          classPrefix: 'pop-',
+          eventPrefix: 'pop-over-window-',
           map: elems[2],
           content: '',
           placement: this.placement,
@@ -100,10 +107,9 @@ export class ActPopOver implements AfterViewInit, OnDestroy, OnChanges {
           openOnMarkerClick: this.openOnMarkerClick,
           closeWhenOthersOpen: this.closeWhenOthersOpen,
           showCloseButton: false,
-          // showCloseButton: this.showCloseButton,
           panOnOpen: this.panOnOpen,
           wrapperClass: this.wrapperClass,
-          offset: { top: '-60px' },
+          offset: { top: '-50px' },
           callbacks: {
             beforeOpen: () => {
               this._createViewContent();
@@ -120,6 +126,10 @@ export class ActPopOver implements AfterViewInit, OnDestroy, OnChanges {
         };
         if (elems[1] != null) {
           options.marker = elems[1];
+          options.position = {
+            lat: options.marker.latitude,
+            lng: options.marker.longitude
+          };
         } else {
           options.position = {
             lat: this.latitude,
@@ -130,24 +140,31 @@ export class ActPopOver implements AfterViewInit, OnDestroy, OnChanges {
       });
     this._popOverInitialized.then(() => {
       if (this.isOpen) {
-        this._openInfoWindow();
+        this.openPopOver();
       }
+      this._manager.addPopOver(this.key, this);
     });
   }
 
-  protected _openInfoWindow() {
+  public openPopOver() {
     this._popOverInitialized.then(() => {
       this._createViewContent();
       this._nativePopOver.open();
     });
   }
 
-  protected _closeInfoWindow() {
+  public closePopOver() {
     this._popOverInitialized.then(() => {
       this._nativePopOver.close();
     });
   }
 
+  public togglePopOver() {
+    this._popOverInitialized.then(() => {
+      this._nativePopOver.isOpen() ? this._nativePopOver.close() : this._nativePopOver.open();
+    });
+  }
+  
   protected _createViewContent() {
     if (this._viewContainerRef.length === 1) {
       return;
@@ -167,9 +184,6 @@ export class ActPopOver implements AfterViewInit, OnDestroy, OnChanges {
     });
   }
 
-  /**
-   * Returns true when the Snazzy Info Window is initialized and open.
-   */
   openStatus(): boolean {
     return this._nativePopOver && this._nativePopOver.isOpen();
   }

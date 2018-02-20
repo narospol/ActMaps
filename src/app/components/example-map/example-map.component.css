@@ -8,3 +8,7 @@
 act-map {
   height: 100%;
 }
+
+.marker-price {
+  color: blue;
+}

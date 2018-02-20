@@ -8,25 +8,25 @@ import { ActMarker } from './marker';
 import { MapsAPILoader } from '../services/maps-api-loader/maps-api-loader';
 import { ActInfoWindow } from './info-window';
 import { InfoMarkerManager } from '../services/managers/info-marker-manager';
+import { ActPopOver } from './pop-over';
 
 
 declare var System: any;
 // tslint:disable
-let markerId = 0;
 @Component({
   selector: 'act-info-marker',
   template: `
   <div id="outWrapper" #outerWrapper>
-    <div id="contentContainer" style="display: none;" #viewContainer>
+    <div style="display: none;" #viewContainer>
       <ng-content></ng-content>
     </div>
   </div>
   `
 })
 export class ActInfoMarker implements AfterViewInit, OnDestroy, OnChanges {
+  @Input() key: String = "Marker";
   @Input() latitude: number;
   @Input() longitude: number;
-  @Input() isOpen: boolean = true;
   @Input() placement: 'top' | 'bottom' | 'left' | 'right' = 'top';
   @Input() maxWidth: number | string = 200;
   @Input() maxHeight: number | string = 200;
@@ -38,26 +38,25 @@ export class ActInfoMarker implements AfterViewInit, OnDestroy, OnChanges {
   @Input() fontSize: string;
   @Input() pointer: string | boolean;
   @Input() shadow: boolean | { h?: string, v?: string, blur: string, spread: string, opacity: number, color: string };
-  @Input() openOnMarkerClick: boolean = true;
-  @Input() closeOnMapClick: boolean = true;
   @Input() wrapperClass: string;
-  @Input() closeWhenOthersOpen: boolean = false;
   @Input() showCloseButton: boolean = false;
   @Input() panOnOpen: boolean = true;
-
+  
   @Output() isOpenChange: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() beforeOpen: EventEmitter<void> = new EventEmitter<void>();
   @Output() afterClose: EventEmitter<void> = new EventEmitter<void>();
-
-
+  
+  
   @ViewChild('outerWrapper', { read: ElementRef }) _outerWrapper: ElementRef;
   @ViewChild('viewContainer', { read: ViewContainerRef }) _viewContainerRef: ViewContainerRef;
   @ContentChild(TemplateRef) _templateRef: TemplateRef<any>;
-
-  key: String = "ActInfoMarker";
-
-  protected _nativePopOver: any;
-  protected _popOverInitialized: Promise<any> | null = null;
+  
+  _popOver: ActPopOver;
+  isOpen: boolean = true;
+  closeOnMapClick: boolean = false;
+  
+  protected _nativeInfoMarker: any;
+  protected _infoMarkerInitialized: Promise<any> | null = null;
 
   constructor(
     private _wrapper: GoogleMapsAPIWrapper,
@@ -66,7 +65,7 @@ export class ActInfoMarker implements AfterViewInit, OnDestroy, OnChanges {
   ) { }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (this._nativePopOver == null) {
+    if (this._nativeInfoMarker == null) {
       return;
     }
     if ('isOpen' in changes && this.isOpen) {
@@ -80,75 +79,92 @@ export class ActInfoMarker implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   ngAfterViewInit() {
-    // const m = this._manager != null ? this._manager.getNativeWindow(this._popOver.key) : null;
-    this._popOverInitialized = this._loader.load()
-      .then(() => System.import('../pop-over.js'))
-      .then((module: any) => Promise.all([module, null, this._wrapper.getNativeMap()]))
-      .then((elems) => {
-        const options: any = {
-          classPrefix: 'info-marker-',
-          eventPrefix: 'info-marker-window-',
-          map: elems[2],
-          content: '',
-          placement: this.placement,
-          maxWidth: this.maxWidth,
-          maxHeight: this.maxHeight,
-          backgroundColor: this.backgroundColor,
-          padding: this.padding,
-          border: this.border,
-          borderRadius: this.borderRadius,
-          fontColor: this.fontColor,
-          pointer: this.pointer,
-          shadow: this.shadow,
-          closeOnMapClick: this.closeOnMapClick,
-          openOnMarkerClick: this.openOnMarkerClick,
-          closeWhenOthersOpen: this.closeWhenOthersOpen,
-          showCloseButton: false,
-          panOnOpen: this.panOnOpen,
-          wrapperClass: this.wrapperClass,
-          callbacks: {
-            beforeOpen: () => {
-              this._createViewContent();
-              this.beforeOpen.emit();
-            },
-            afterOpen: () => {
-              this.isOpenChange.emit(this.openStatus());
-            },
-            afterClose: () => {
-              this.afterClose.emit();
-              this.isOpenChange.emit(this.openStatus());
-            }
+    this.createInfoMarker();
+    setTimeout(() => {
+      this._popOver = this._manager.getPopOver(this.key);
+      console.log('popOver ', this._popOver);
+    }, 1e3);
+  }
+
+  protected createInfoMarker() {
+    this._infoMarkerInitialized = this._loader.load()
+    .then(() => System.import('../pop-over.js'))
+    .then((module: any) => Promise.all([module, null, this._wrapper.getNativeMap()]))
+    .then((elems) => {
+      const options: any = {
+        classPrefix: 'info-marker-',
+        eventPrefix: 'info-marker-window-',
+        map: elems[2],
+        content: '',
+        placement: this.placement,
+        maxWidth: this.maxWidth,
+        maxHeight: this.maxHeight,
+        backgroundColor: this.backgroundColor,
+        padding: this.padding,
+        border: this.border,
+        borderRadius: this.borderRadius,
+        fontColor: this.fontColor,
+        pointer: this.pointer,
+        shadow: this.shadow,
+        closeOnMapClick: this.closeOnMapClick,
+        closeWhenOthersOpen: false,
+        showCloseButton: false,
+        isHandleBackground: true,
+        panOnOpen: this.panOnOpen,
+        wrapperClass: this.wrapperClass,
+        callbacks: {
+          beforeOpen: () => {
+            this._createViewContent();
+            this.beforeOpen.emit();
+          },
+          afterOpen: () => {
+            this.isOpenChange.emit(this.openStatus());
+          },
+          afterClose: () => {
+            this.afterClose.emit();
+            this.isOpenChange.emit(this.openStatus());
+          },
+          bgClicked: () => {
+            this._popOver && this._popOver.togglePopOver();
+          },
+          bgHoverEnter: () => { // TODO: implement mouse hover into pop-over.js
+            console.log('hover enter');
+            this._popOver && this._popOver.openPopOver();
+          },
+          bgHoverLeave: () => {
+            console.log('hover leave');
+            this._popOver && this._popOver.closePopOver();
           }
-        };
-        if (elems[1] != null) {
-          options.marker = elems[1];
-        } else {
-          options.position = {
-            lat: this.latitude,
-            lng: this.longitude
-          };
         }
-        this._nativePopOver = new elems[0](options);
-      });
-    this._popOverInitialized.then(() => {
+      };
+      if (elems[1] != null) {
+        options.marker = elems[1];
+      } else {
+        options.position = {
+          lat: this.latitude,
+          lng: this.longitude
+        };
+      }
+      this._nativeInfoMarker = new elems[0](options);
+    });
+    this._infoMarkerInitialized.then(() => {
       if (this.isOpen) {
         this._openInfoWindow();
       }
-      this.key = `${this.key}-${++markerId}`;
       this._manager.addInfoMarker(this.key, this);
     });
   }
 
   protected _openInfoWindow() {
-    this._popOverInitialized.then(() => {
+    this._infoMarkerInitialized.then(() => {
       this._createViewContent();
-      this._nativePopOver.open();
+      this._nativeInfoMarker.open();
     });
   }
 
   protected _closeInfoWindow() {
-    this._popOverInitialized.then(() => {
-      this._nativePopOver.close();
+    this._infoMarkerInitialized.then(() => {
+      this._nativeInfoMarker.close();
     });
   }
 
@@ -157,7 +173,7 @@ export class ActInfoMarker implements AfterViewInit, OnDestroy, OnChanges {
       return;
     }
     const evr = this._viewContainerRef.createEmbeddedView(this._templateRef);
-    this._nativePopOver.setContent(this._outerWrapper.nativeElement);
+    this._nativeInfoMarker.setContent(this._outerWrapper.nativeElement);
     // we have to run this in a separate cycle.
     setTimeout(() => {
       evr.detectChanges();
@@ -165,19 +181,23 @@ export class ActInfoMarker implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   protected _updatePosition() {
-    this._nativePopOver.setPosition({
+    this._nativeInfoMarker.setPosition({
       lat: this.latitude,
       lng: this.longitude
     });
   }
 
   openStatus(): boolean {
-    return this._nativePopOver && this._nativePopOver.isOpen();
+    return this._nativeInfoMarker && this._nativeInfoMarker.isOpen();
+  }
+
+  getMap() {
+    return this._nativeInfoMarker.map;
   }
 
   ngOnDestroy() {
-    if (this._nativePopOver) {
-      this._nativePopOver.destroy();
+    if (this._nativeInfoMarker) {
+      this._nativeInfoMarker.destroy();
     }
   }
 }
